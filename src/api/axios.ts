@@ -25,8 +25,16 @@ api.interceptors.request.use(
     const auth = localStorage.getItem("auth");
 
     if (auth) {
-      const { token } = JSON.parse(auth);
-      config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const { token } = JSON.parse(auth);
+
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        console.error("Invalid auth data:", error);
+        localStorage.removeItem("auth");
+      }
     }
 
     return config;

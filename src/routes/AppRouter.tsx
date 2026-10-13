@@ -18,7 +18,9 @@ import Settings from "../pages/candidate/Settings";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import Register from "../pages/auth/Register";
 import ApplicantsPage from "../pages/recruiter/ApplicantsPage";
-
+import OAuth2Success from "../pages/OAuth2Success";
+import ManageJobs from "../pages/recruiter/ManageJobs";
+import AIRankingsPage from "../pages/recruiter/AIRankingsPage";
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -26,6 +28,7 @@ export default function AppRouter() {
         {/* Authentication */}
         <Route element={<AuthLayout />}>
           <Route path="/" element={<Login />} />
+           <Route path="/register" element={<Register />} />
         </Route>
 
         {/* Dashboard */}
@@ -49,12 +52,28 @@ export default function AppRouter() {
   }
 />
 
+<Route
+  path="/recruiter/jobs"
+  element={
+    <ProtectedRoute role="RECRUITER">
+      <ManageJobs />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/recruiter/ai-rankings"
+  element={
+    <ProtectedRoute role="RECRUITER">
+      <AIRankingsPage/>
+    </ProtectedRoute>
+  }
+/>
   <Route path="/jobs" element={<JobList />} />
   <Route path="/jobs/:id" element={<JobDetails />} />
-  <Route path="/register" element={<Register />} />
+ 
   <Route path="/recruiter/jobs/create" element={<CreateJob />} />
   <Route path="/recruiter/jobs/:id/edit" element={<EditJob />} />
-
+<Route path="/oauth2/success" element={<OAuth2Success/>} />
   <Route path="/candidate/resume" element={<ResumeUpload />} />
   <Route path="/candidate/applications" element={<ApplicationHistory />} />
   <Route

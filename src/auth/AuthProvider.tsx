@@ -7,12 +7,21 @@ export function AuthProvider({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const auth = localStorage.getItem("auth");
+    try {
+      const auth = localStorage.getItem("auth");
 
-    if (auth) {
-      setUser(JSON.parse(auth));
+      if (auth) {
+        const parsedUser: AuthUser = JSON.parse(auth);
+        setUser(parsedUser);
+      }
+    } catch (error) {
+      console.error("Failed to restore authentication:", error);
+      localStorage.removeItem("auth");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -33,6 +42,7 @@ export function AuthProvider({
         login,
         logout,
         isAuthenticated: !!user,
+        isLoading,
       }}
     >
       {children}

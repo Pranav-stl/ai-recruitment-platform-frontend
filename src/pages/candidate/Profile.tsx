@@ -4,8 +4,6 @@ import {
   Phone,
   MapPin,
   FileText,
-  Briefcase,
-  GraduationCap,
   Pencil,
   Calendar,
 } from "lucide-react";
@@ -18,13 +16,7 @@ import type { UserResponse } from "../../types/user";
 import { getMyResume } from "../../api/resumeApi";
 import type { ResumeResponse } from "../../types/resume";
 
-interface ExperienceEntry {
-  id: string;
-  role: string;
-  organization: string;
-  duration: string;
-  description: string;
-}
+
 
 interface EducationEntry {
   id: string;
@@ -35,24 +27,7 @@ interface EducationEntry {
 
 
 
-const MOCK_EXPERIENCE: ExperienceEntry[] = [
-  {
-    id: "exp-1",
-    role: "Full Stack Developer — Major Project",
-    organization: "Team No. 30, Sai Vidya Institute of Technology",
-    duration: "Jan 2026 – Present",
-    description:
-      "Building an AI/ML-powered career intelligence platform for resume parsing, skill gap detection, and job matching, using a Spring Boot backend and React frontend.",
-  },
-  {
-    id: "exp-2",
-    role: "Full Stack Developer Trainee (Bootcamp)",
-    organization: "EmbarkX Spring Boot Full Stack Program",
-    duration: "2025",
-    description:
-      "Completed a structured full stack bootcamp, shipping a Spring Boot + React + Stripe e-commerce application as the primary resume project.",
-  },
-];
+
 
 const MOCK_EDUCATION: EducationEntry[] = [
   {

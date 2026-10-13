@@ -1,22 +1,27 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 import {
   registerCandidate,
   registerRecruiter,
 } from "../../api/auth";
 
-import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
+import {
+  AuthShell,
+  FieldLabel,
+  FormError,
+  PasswordField,
+  RoleSelector,
+} from "../../pages/auth/AuthShell";
 
 export default function Register() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState<"CANDIDATE" | "RECRUITER">(
-    "CANDIDATE"
-  );
+  const [role, setRole] = useState<"CANDIDATE" | "RECRUITER">("CANDIDATE");
 
   const [form, setForm] = useState({
     fullName: "",
@@ -26,22 +31,21 @@ export default function Register() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
+    setError("");
   };
 
-  const handleRegister = async (
-    e: React.FormEvent
-  ) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
     setLoading(true);
+    setError("");
 
     try {
       if (role === "CANDIDATE") {
@@ -54,6 +58,7 @@ export default function Register() {
 
       navigate("/");
     } catch {
+      setError("Registration failed. Please check your details and try again.");
       toast.error("Registration failed");
     } finally {
       setLoading(false);
@@ -61,107 +66,101 @@ export default function Register() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
-      <Card className="w-full max-w-md p-8 rounded-2xl shadow-xl">
-
-        <h1 className="text-3xl font-bold text-center">
-          Create Account
+    <AuthShell>
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+          Create your account
         </h1>
-
-        <p className="text-center text-slate-500 mt-2 mb-6">
-          Join AI Recruitment Platform
+        <p className="mt-2 text-sm text-slate-500">
+          Join TalentSync as a candidate or a recruiter.
         </p>
+      </div>
 
-        <div className="flex gap-2 mb-5">
+      <RoleSelector value={role} onChange={setRole} />
 
-          <Button
-            type="button"
-            variant={
-              role === "CANDIDATE"
-                ? "default"
-                : "outline"
-            }
-            className="flex-1"
-            onClick={() => setRole("CANDIDATE")}
-          >
-            Candidate
-          </Button>
+      <form onSubmit={handleRegister} className="mt-6 space-y-5">
+        {error && <FormError message={error} />}
 
-          <Button
-            type="button"
-            variant={
-              role === "RECRUITER"
-                ? "default"
-                : "outline"
-            }
-            className="flex-1"
-            onClick={() => setRole("RECRUITER")}
-          >
-            Recruiter
-          </Button>
-
-        </div>
-
-        <form
-          onSubmit={handleRegister}
-          className="space-y-4"
-        >
+        <div>
+          <FieldLabel htmlFor="reg-name">Full name</FieldLabel>
           <Input
+            id="reg-name"
             name="fullName"
-            placeholder="Full Name"
+            autoComplete="name"
+            placeholder="Your full name"
             value={form.fullName}
             onChange={handleChange}
             required
+            className="h-11"
           />
+        </div>
 
+        <div>
+          <FieldLabel htmlFor="reg-email">Email</FieldLabel>
           <Input
+            id="reg-email"
             name="email"
             type="email"
-            placeholder="Email"
+            autoComplete="email"
+            placeholder="you@example.com"
             value={form.email}
             onChange={handleChange}
             required
+            className="h-11"
           />
+        </div>
 
+        <div>
+          <FieldLabel htmlFor="reg-phone">Phone</FieldLabel>
           <Input
+            id="reg-phone"
             name="phone"
-            placeholder="Phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="Phone number"
             value={form.phone}
             onChange={handleChange}
+            className="h-11"
           />
+        </div>
 
-          <Input
+        <div>
+          <FieldLabel htmlFor="reg-password">Password</FieldLabel>
+          <PasswordField
+            id="reg-password"
             name="password"
-            type="password"
-            placeholder="Password"
+            autoComplete="new-password"
+            placeholder="Create a password"
             value={form.password}
             onChange={handleChange}
-            required
           />
+        </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading
-              ? "Creating Account..."
-              : "Register"}
-          </Button>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-11 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              Creating account...
+            </>
+          ) : (
+            "Create account"
+          )}
+        </Button>
+      </form>
 
-          <p className="text-center text-sm">
-            Already have an account?{" "}
-            <Link
-              to="/"
-              className="text-blue-600 hover:underline"
-            >
-              Login
-            </Link>
-          </p>
-
-        </form>
-
-      </Card>
-    </div>
+      <p className="mt-8 text-center text-sm text-slate-500">
+        Already have an account?{" "}
+        <Link
+          to="/"
+          className="font-medium text-indigo-600 hover:text-indigo-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-sm"
+        >
+          Sign in
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

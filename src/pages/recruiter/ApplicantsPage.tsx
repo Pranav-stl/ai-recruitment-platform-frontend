@@ -153,7 +153,9 @@ const getScoreLabel = (score: number) => {
             <tr key={app.applicationId} className="border-t">
               <td className="p-3">{app.candidateName}</td>
               <td className="p-3">{app.candidateEmail}</td>
-              <td className="p-3">{app.matchScore}%</td>
+             <td className="p-3">
+  {app.combinedScore ?? app.matchScore}%
+</td>
 
               <td className="p-3">
   <Button
@@ -256,10 +258,12 @@ const getScoreLabel = (score: number) => {
 
         <p
           className={`text-4xl font-bold ${getScoreColor(
-            selectedApplication.matchScore
+             selectedApplication.combinedScore ??
+        selectedApplication.matchScore
           )}`}
         >
-          {selectedApplication.matchScore}%
+            {selectedApplication.combinedScore ??
+      selectedApplication.matchScore}%
         </p>
 
       </div>

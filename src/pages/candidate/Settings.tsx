@@ -14,7 +14,6 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import { Switch } from "../../components/ui/switch";
-import { Separator } from "../../components/ui/separator";
 import { cn } from "../../lib/utils";
 
 interface NotificationPrefs {

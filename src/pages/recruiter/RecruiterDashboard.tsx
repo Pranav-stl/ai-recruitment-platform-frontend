@@ -1,13 +1,16 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Briefcase,
-  Users,
-  Sparkles,
-  CalendarCheck,
-  Plus,
-  ClipboardList,
-  Trophy,
   ArrowUpRight,
+  Briefcase,
+  ClipboardList,
+  Inbox,
+  Plus,
+  Sparkles,
+  Target,
+  Trophy,
+  UserCheck,
+  Users,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -18,7 +21,6 @@ import {
   CardTitle,
 } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
-//import { Progress } from "..//components/ui/progress";
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import {
   Table,
@@ -28,155 +30,139 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
-
-import { useEffect, useState } from "react";
 import {
   getRecruiterDashboard,
   getRecruiterApplicationsByJob,
 } from "../../api/applicationApi";
-import type { RecruiterApplicationResponse, RecruiterDashboard } from "../../types/application";
+import type {
+  RecruiterApplicationResponse,
+  RecruiterDashboard as RecruiterDashboardData,
+} from "../../types/application";
 import { getRecruiterJobs } from "../../api/jobApi";
 import type { JobResponse } from "../../types/job";
-// ---- Mock data (no API calls) -------------------------------------------
-
-
-type JobStatus = "Active" | "Paused" | "Closed" | "Draft";
-
-const jobStatusStyles: Record<JobStatus, string> = {
-  Active: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  Paused: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  Closed: "bg-muted text-muted-foreground",
-  Draft: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-};
-
-const RECENT_JOBS: {
-  title: string;
-  applicants: number;
-  status: JobStatus;
-  postedDate: string;
-}[] = [
-  { title: "Senior Backend Engineer", applicants: 142, status: "Active", postedDate: "Jul 02, 2026" },
-  { title: "Frontend Developer (React)", applicants: 98, status: "Active", postedDate: "Jun 28, 2026" },
-  { title: "Data Analyst", applicants: 87, status: "Active", postedDate: "Jul 05, 2026" },
-  { title: "DevOps Engineer", applicants: 63, status: "Paused", postedDate: "Jun 20, 2026" },
-  { title: "Product Designer", applicants: 51, status: "Closed", postedDate: "Jun 10, 2026" },
-  { title: "QA Engineer", applicants: 34, status: "Draft", postedDate: "Jul 08, 2026" },
-];
-
-type CandidateStatus = "Shortlisted" | "Interview Scheduled" | "Under Review" | "New";
-
-const candidateStatusStyles: Record<CandidateStatus, string> = {
-  Shortlisted: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  "Interview Scheduled": "bg-primary/10 text-primary",
-  "Under Review": "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  New: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-};
-
-const TOP_CANDIDATES: {
-  name: string;
-  initials: string;
-  jobApplied: string;
-  matchScore: number;
-  status: CandidateStatus;
-}[] = [
-  { name: "Ananya Sharma", initials: "AS", jobApplied: "Senior Backend Engineer", matchScore: 94, status: "Shortlisted" },
-  { name: "Rahul Verma", initials: "RV", jobApplied: "Frontend Developer", matchScore: 91, status: "Interview Scheduled" },
-  { name: "Priya Nair", initials: "PN", jobApplied: "Data Analyst", matchScore: 88, status: "Under Review" },
-  { name: "Karan Mehta", initials: "KM", jobApplied: "DevOps Engineer", matchScore: 85, status: "Shortlisted" },
-  { name: "Sneha Iyer", initials: "SI", jobApplied: "Frontend Developer", matchScore: 82, status: "New" },
-];
 
 const QUICK_ACTIONS = [
-  { label: "Post New Job", description: "Create a new job listing", icon: Plus, href: "/recruiter/jobs/create" },
-  { label: "View Applicants", description: "Review incoming applications", icon: ClipboardList, href: "/recruiter/applicants" },
+  { label: "Create a Job", description: "Post a new job listing", icon: Plus, href: "/recruiter/jobs/create" },
+  { label: "Manage Jobs", description: "View your job listings", icon: Briefcase, href: "/recruiter/jobs" },
+  { label: "Review Applications", description: "Go through incoming applicants", icon: ClipboardList, href: "/recruiter/applicants" },
   { label: "AI Rankings", description: "See top-matched candidates", icon: Trophy, href: "/recruiter/ai-rankings" },
 ] as const;
 
-// ---- Page -----------------------------------------------------------------
-
 export default function RecruiterDashboard() {
-  const [dashboard, setDashboard] = useState<RecruiterDashboard | null>(null);
-
+  const [dashboard, setDashboard] = useState<RecruiterDashboardData | null>(null);
   const [jobs, setJobs] = useState<JobResponse[]>([]);
-  const [topCandidates, setTopCandidates] = useState<
-  RecruiterApplicationResponse[]
->([]);
-useEffect(() => {
-  const loadDashboard = async () => {
-  const [dashboardRes, jobsRes] = await Promise.all([
-    getRecruiterDashboard(),
-    getRecruiterJobs(),
-  ]);
+  const [topCandidates, setTopCandidates] = useState<RecruiterApplicationResponse[]>([]);
 
-  setDashboard(dashboardRes.data);
-  setJobs(jobsRes.data);
+  useEffect(() => {
+    const loadDashboard = async () => {
+      const [dashboardRes, jobsRes] = await Promise.all([
+        getRecruiterDashboard(),
+        getRecruiterJobs(),
+      ]);
 
-  const allCandidates: RecruiterApplicationResponse[] = [];
+      setDashboard(dashboardRes.data);
+      setJobs(jobsRes.data);
 
-  for (const job of jobsRes.data) {
-    const { data } = await getRecruiterApplicationsByJob(job.id);
-    allCandidates.push(...data);
-  }
+      const allCandidates: RecruiterApplicationResponse[] = [];
 
-  allCandidates.sort(
-    (a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0)
-  );
+      for (const job of jobsRes.data) {
+        const { data } = await getRecruiterApplicationsByJob(job.id);
+        allCandidates.push(...data);
+      }
 
-  setTopCandidates(allCandidates.slice(0, 5));
-};
+      allCandidates.sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
 
-loadDashboard();
-}, []);
+      setTopCandidates(allCandidates.slice(0, 5));
+    };
+
+    loadDashboard();
+  }, []);
+
+  const stats = [
+    {
+      label: "Total Jobs",
+      value: dashboard?.totalJobs ?? 0,
+      hint: "Jobs you've posted",
+      icon: Briefcase,
+      tint: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Total Applications",
+      value: dashboard?.totalApplications ?? 0,
+      hint: "Across all jobs",
+      icon: Users,
+      tint: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      label: "Average Match Score",
+      value: `${Math.round(dashboard?.averageMatchScore ?? 0)}%`,
+      hint: "AI compatibility score",
+      icon: Target,
+      tint: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    },
+    {
+      label: "Shortlisted",
+      value: dashboard?.shortlistedApplications ?? 0,
+      hint: "Shortlisted applications",
+      icon: UserCheck,
+      tint: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. Welcome header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back, Priya 👋</h1>
-        <p className="text-sm text-muted-foreground">
-          Here&apos;s what&apos;s happening across your open roles today.
+      {/* Hero */}
+      <section className="rounded-2xl border bg-card p-6 sm:p-8">
+        <Badge
+          variant="outline"
+          className="gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          AI-powered hiring intelligence
+        </Badge>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+          Welcome back 👋
+        </h1>
+        <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
+          Manage your jobs, review applicants, and evaluate candidates with AI
+          match insights.
         </p>
-      </div>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <Link to="/recruiter/jobs/create">
+            <Button>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Create Job
+            </Button>
+          </Link>
+          <Link to="/recruiter/jobs">
+            <Button variant="outline">
+              <Briefcase className="mr-1.5 h-4 w-4" />
+              View All Jobs
+            </Button>
+          </Link>
+        </div>
+      </section>
 
-      {/* 2. Statistic cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-  {
-    label: "Active Jobs",
-    value: dashboard?.totalJobs ?? 0,
-    hint: "Your jobs",
-    icon: Briefcase,
-  },
-  {
-    label: "Total Applicants",
-    value: dashboard?.totalApplications ?? 0,
-    hint: "Across all jobs",
-    icon: Users,
-  },
-  {
-    label: "Average AI Match Score",
-    value: `${Math.round(dashboard?.averageMatchScore ?? 0)}%`,
-    hint: "Across all applications",
-    icon: Sparkles,
-  },
-  {
-    label: "Shortlisted",
-    value: dashboard?.shortlistedApplications ?? 0,
-    hint: "Candidates",
-    icon: CalendarCheck,
-  },
-].map((stat) => {
+        {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardDescription>{stat.label}</CardDescription>
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-                  <Icon className="h-4 w-4 text-primary" strokeWidth={2.25} />
+            <Card
+              key={stat.label}
+              className="gap-0 rounded-2xl py-0 shadow-none transition-shadow hover:shadow-md"
+            >
+              <CardContent className="flex items-start justify-between p-5">
+                <div>
+                  <p className="text-sm font-medium">{stat.label}</p>
+                  <p className="mt-3 text-3xl font-bold tracking-tight">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold tracking-tight">{stat.value}</div>
-                <p className="mt-1 text-xs text-muted-foreground">{stat.hint}</p>
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.tint}`}
+                >
+                  <Icon className="h-5 w-5" strokeWidth={2} />
+                </div>
               </CardContent>
             </Card>
           );
@@ -184,119 +170,165 @@ loadDashboard();
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* 3. Recent Jobs table */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Jobs</CardTitle>
-              <CardDescription>Your most recently posted roles</CardDescription>
+        {/* Recent Jobs */}
+        <Card className="rounded-2xl shadow-none lg:col-span-2">
+          <CardHeader className="flex flex-row items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-base font-semibold">Recent Jobs</CardTitle>
+              <CardDescription>Your posted roles and their status.</CardDescription>
             </div>
             <Link to="/recruiter/jobs">
               <Button variant="ghost" size="sm">
-              
                 View all
                 <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Job Title</TableHead>
-                  <TableHead className="text-right">Applicants</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Posted Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {jobs.map((job) => (
-                  <TableRow key={job.title}>
-                    <TableCell className="font-medium">{job.title}</TableCell>
-                    <TableCell className="text-right">{}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className={job.active ? jobStatusStyles.Active : jobStatusStyles.Closed}
-                      >
-                        {job.active ? "Active" : "Closed"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {jobs.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-10 text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+                  <Briefcase className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">No jobs posted yet</p>
+                  <p className="text-xs text-muted-foreground">
+                    Create your first job to start receiving applications.
+                  </p>
+                </div>
+                <Link to="/recruiter/jobs/create">
+                  <Button size="sm">
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Create your first job
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-foreground">Job Title</TableHead>
+                      <TableHead className="text-right text-foreground">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.map((job) => (
+                      <TableRow key={job.id} className="transition-colors hover:bg-muted/50">
+                        <TableCell className="max-w-[18rem] truncate font-semibold">
+                          {job.title}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span
+                            className={`text-xs font-semibold uppercase tracking-wide ${
+                              job.active
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {job.active ? "Active" : "Closed"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* 4. Top AI Candidates */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top AI Candidates</CardTitle>
-            <CardDescription>Highest-matched applicants right now</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {topCandidates.map((candidate) => (
-              <div key={candidate.applicationId} className="flex items-start gap-3">
-                <Avatar className="h-9 w-9 shrink-0">
-                  <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
-                    {candidate.candidateName
-  .split(" ")
-  .map((n) => n[0])
-  .join("")
-  .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium leading-none">{candidate.candidateName}</p>
-                    <Badge
-                      variant="secondary"
-              
-                    >
-                      {candidate.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Match Score: {candidate.matchScore}%</p>
-                  
-                </div>
+        {/* Top AI Candidates */}
+        <Card className="rounded-2xl shadow-none">
+          <CardHeader className="flex flex-row items-start justify-between gap-2">
+            <div className="flex min-w-0 items-start gap-3">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="min-w-0 space-y-1">
+                <CardTitle className="text-base font-semibold">Top AI Candidates</CardTitle>
+                <CardDescription>Highest-matched applicants.</CardDescription>
               </div>
-            ))}
+            </div>
+            <Link to="/recruiter/ai-rankings" className="shrink-0">
+              <Button variant="ghost" size="sm">
+                View all
+                <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {topCandidates.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-10 text-center">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted">
+                  <Inbox className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium">No applications yet</p>
+                <p className="max-w-[16rem] text-xs text-muted-foreground">
+                  Top-matched candidates will appear here once people apply to your jobs.
+                </p>
+              </div>
+            ) : (
+              topCandidates.map((candidate) => {
+                const score = candidate.matchScore ?? 0;
+                return (
+                  <div
+                    key={candidate.applicationId}
+                    className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
+                        {candidate.candidateName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-semibold">{candidate.candidateName}</p>
+                        <span className="text-sm font-bold tabular-nums">{score}%</span>
+                      </div>
+                      <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {candidate.status}
+                      </p>
+                      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${Math.min(Math.max(score, 0), 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* 5. Quick Actions */}
-      <Card>
+      {/* Quick Actions */}
+      <Card className="rounded-2xl shadow-none">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Jump straight into common recruiter tasks</CardDescription>
+          <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
+          <CardDescription>Jump straight into common recruiter tasks.</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {QUICK_ACTIONS.map((action) => {
             const Icon = action.icon;
             return (
-              <Link key={action.label} to={action.href}>
-  <Button
-    variant="outline"
-    className="h-auto w-full flex-col items-start gap-2 whitespace-normal p-4 text-left"
-  >
-    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10">
-      <Icon className="h-4 w-4 text-primary" strokeWidth={2.25} />
-    </div>
-
-    <div>
-      <p className="text-sm font-medium">{action.label}</p>
-      <p className="text-xs font-normal text-muted-foreground">
-        {action.description}
-      </p>
-    </div>
-  </Button>
-</Link>
+              <Link
+                key={action.label}
+                to={action.href}
+                className="flex items-center gap-3 rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-muted/50"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <Icon className="h-5 w-5 text-primary" strokeWidth={2} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{action.label}</p>
+                  <p className="truncate text-xs text-muted-foreground">{action.description}</p>
+                </div>
+              </Link>
             );
           })}
         </CardContent>

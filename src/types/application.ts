@@ -18,6 +18,7 @@ export interface ApplicationResponse {
   jobTitle : string;
   company: string
   resumeSummary: string;
+  combinedScore: number | null;
 analysis: string;
 }
 
@@ -57,7 +58,7 @@ export interface RecruiterApplicationResponse {
   resumeId: number;
   status: string;
   matchScore: number;
-
+combinedScore: number | null;
   resumeSummary: string;
   analysis: string;
 

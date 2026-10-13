@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Briefcase,
@@ -6,10 +7,12 @@ import {
   Sparkles,
   UserCircle,
   Settings,
+  Users,
+  PlusCircle,
 } from "lucide-react";
 import type { NavItem } from "../types/navigation";
 
-export const NAV_ITEMS: NavItem[] = [
+export const CANDIDATE_NAV_ITEMS: NavItem[] = [
   {
     label: "Dashboard",
     href: "/candidate/dashboard",
@@ -32,8 +35,41 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     label: "AI Match",
-    href: "/candidate/match-analysis",
+    href: "/candidate/applications",
     icon: Sparkles,
+  },
+  {
+    label: "Profile",
+    href: "/candidate/profile",
+    icon: UserCircle,
+  },
+  {
+    label: "Settings",
+    href: "/candidate/settings",
+    icon: Settings,
+  },
+];
+
+export const RECRUITER_NAV_ITEMS: NavItem[] = [
+  {
+    label: "Dashboard",
+    href: "/recruiter/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Manage Jobs",
+    href: "/recruiter/jobs",
+    icon: Briefcase,
+  },
+  {
+    label: "Create Job",
+    href: "/recruiter/jobs/create",
+    icon: PlusCircle,
+  },
+  {
+    label: "Applicants",
+    href: "/recruiter/applicants",
+    icon: Users,
   },
   {
     label: "Profile",

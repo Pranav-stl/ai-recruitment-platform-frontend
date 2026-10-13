@@ -1,18 +1,29 @@
+
 import { NavLink } from "react-router-dom";
-import { NAV_ITEMS } from "../../constants/navigation";
+import {
+  CANDIDATE_NAV_ITEMS,
+  RECRUITER_NAV_ITEMS,
+} from "../../constants/navigation";
+import { useAuth } from "../../auth/useAuth";
 import { cn } from "../../lib/utils";
 
 interface SidebarNavProps {
-  /** Called after a link is clicked — used to close the mobile sheet */
   onNavigate?: () => void;
 }
 
-
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
+  const { user } = useAuth();
+
+  const items =
+    user?.role === "RECRUITER"
+      ? RECRUITER_NAV_ITEMS
+      : CANDIDATE_NAV_ITEMS;
+
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
+
         return (
           <NavLink
             key={item.href}
