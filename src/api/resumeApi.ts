@@ -1,20 +1,17 @@
 import api from "./axios";
 import type { ResumeResponse } from "../types/resume";
 
+
 export const uploadResume = (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
   return api.post<ResumeResponse>(
     "/api/resumes/upload",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
 };
+
 
 export const getResume = (id: number) =>
   api.get<ResumeResponse>(`/api/resumes/${id}`);
