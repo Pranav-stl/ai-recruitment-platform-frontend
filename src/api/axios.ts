@@ -1,40 +1,36 @@
+
 import axios from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-api.interceptors.request.use(
-  (config) => {
+    // Support the existing auth storage format.
     const auth = localStorage.getItem("auth");
+    const standaloneToken = localStorage.getItem("token");
+
+    let token = standaloneToken;
 
     if (auth) {
       try {
-        const { token } = JSON.parse(auth);
-
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        const parsedAuth = JSON.parse(auth);
+        if (parsedAuth.token) {
+          token = parsedAuth.token;
         }
-      } catch (error) {
-        console.error("Invalid auth data:", error);
-        localStorage.removeItem("auth");
+      } catch {
+        console.error("Invalid auth data in localStorage");
       }
+    }
+
+    if (token) {
+      config.headers.set("Authorization", `Bearer ${token}`);
+    }
+
+    // Let Axios/browser set multipart Content-Type and its boundary.
+    if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+      config.headers.delete("Content-Type");
     }
 
     return config;
@@ -47,6 +43,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("auth");
+      localStorage.removeItem("token");
       window.location.href = "/";
     }
 
