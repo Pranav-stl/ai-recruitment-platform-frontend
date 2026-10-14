@@ -1,7 +1,10 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../auth/useAuth";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const OAuth2Success = () => {
   const navigate = useNavigate();
@@ -9,19 +12,17 @@ const OAuth2Success = () => {
 
   useEffect(() => {
     const handleOAuthSuccess = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+
+      if (!token) {
+        navigate("/", { replace: true });
+        return;
+      }
+
       try {
-        // Get JWT from URL
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        // Get current user from backend
         const response = await axios.get(
-          "http://localhost:8080/auth/me",
+          `${API_BASE_URL}/auth/me`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -31,35 +32,31 @@ const OAuth2Success = () => {
 
         const user = response.data;
 
-        // Convert backend response to your existing AuthUser structure
         const authUser = {
-          token: token,
+          token,
           id: user.id,
           fullName: user.fullName,
           email: user.email,
           role: user.role,
         };
 
-        // Use your existing authentication system
         login(authUser);
 
-        // Remove token from browser URL
+        // Remove the token from the visible URL.
         window.history.replaceState(
           {},
           document.title,
           "/oauth2/success"
         );
 
-        // Redirect according to role
         if (user.role === "RECRUITER") {
-          navigate("/recruiter/dashboard");
+          navigate("/recruiter/dashboard", { replace: true });
         } else {
-          navigate("/candidate/dashboard");
+          navigate("/candidate/dashboard", { replace: true });
         }
-
       } catch (error) {
         console.error("GitHub login failed:", error);
-        navigate("/login");
+        navigate("/", { replace: true });
       }
     };
 
